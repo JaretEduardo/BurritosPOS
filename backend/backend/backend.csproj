@@ -13,9 +13,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Domain\" />
-    <Folder Include="Application\" />
-    <Folder Include="Infrastructure\" />
+    <Folder Include="Application\DTOs\" />
+    <Folder Include="Application\Interfaces\" />
+    <Folder Include="Application\Services\" />
+    <Folder Include="Domain\Entities\" />
+    <Folder Include="Domain\Documents\" />
+    <Folder Include="Infrastructure\Persistence\MySQL\" />
+    <Folder Include="Infrastructure\Persistence\MongoDB\" />
+    <Folder Include="Infrastructure\Repositories\" />
   </ItemGroup>
 
 </Project>
