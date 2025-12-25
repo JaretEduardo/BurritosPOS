@@ -1,0 +1,10 @@
+# Ignorar carpeta temporal de Visual Studio
+.vs/
+.vscode/
+
+# Ignorar archivos de compilación (binarios)
+bin/
+obj/
+
+# Ignorar archivos de usuario
+*.user
