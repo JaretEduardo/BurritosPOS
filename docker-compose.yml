@@ -1,0 +1,61 @@
+services:
+  # 1. MySQL (Base de datos relacional) 🐬
+  burrito_mysql:
+    image: mysql:8.0
+    container_name: burrito_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: PasswordSeguro123!
+      MYSQL_DATABASE: BurritoPOS
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # 2. MongoDB (Base de datos NoSQL) 🍃
+  burrito_mongo:
+    image: mongo:latest
+    container_name: burrito_mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: PasswordSeguro123!
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # 3. Backend (.NET API) 🧠
+  burrito_api:
+    build:
+      context: ./backend  # <--- RUTA CORREGIDA (Tu carpeta se llama "backend")
+      dockerfile: backend/Dockerfile
+    container_name: burrito_api
+    ports:
+      - "5000:8080"
+    environment:
+      # Conexión a MySQL (Server=burrito_mysql)
+      - ConnectionStrings__DefaultConnection=Server=burrito_mysql;Database=BurritoPOS;User=root;Password=PasswordSeguro123!;
+      # Conexión a Mongo (host=burrito_mongo)
+      - MongoSettings__ConnectionString=mongodb://root:PasswordSeguro123!@burrito_mongo:27017
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - burrito_mysql
+      - burrito_mongo
+
+  # 4. Frontend (Next.js) ⚛️
+  burrito_front:
+    build:
+      context: ./frontend # <--- RUTA CORREGIDA
+      dockerfile: Dockerfile
+    container_name: burrito_front
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - burrito_api
+
+volumes:
+  mysql_data:
+  mongo_data:
