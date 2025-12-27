@@ -1,5 +1,8 @@
-﻿using backend.Infrastructure.Persistence.MongoDB;
+﻿using backend.Application.Interfaces;
+using backend.Application.Services;
+using backend.Infrastructure.Persistence.MongoDB;
 using backend.Infrastructure.Persistence.MySQL;
+using backend.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +34,10 @@ namespace backend.Infrastructure
             });
 
             services.AddScoped<BurritosMongoContext>();
+
+            services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+
+            services.AddScoped<IAuthService, AuthService>();
 
             return services;
         }
