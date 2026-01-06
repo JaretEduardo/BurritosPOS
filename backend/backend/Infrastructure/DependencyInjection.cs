@@ -39,6 +39,10 @@ namespace backend.Infrastructure
 
             services.AddScoped<IAuthService, AuthService>();
 
+            services.AddScoped<IProductRepository, ProductRepository>();
+
+            services.AddScoped<IInventoryService, InventoryService>();
+
             return services;
         }
     }
