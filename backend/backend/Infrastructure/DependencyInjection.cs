@@ -43,6 +43,8 @@ namespace backend.Infrastructure
 
             services.AddScoped<IInventoryService, InventoryService>();
 
+            services.AddScoped<IInventoryRepository, InventoryRepository>();
+
             return services;
         }
     }

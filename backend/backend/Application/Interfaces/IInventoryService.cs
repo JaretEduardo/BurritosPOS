@@ -8,5 +8,9 @@ namespace backend.Application.Interfaces
         Task<Product> ProductAsync(ProductDto dto);
 
         Task<IEnumerable<Product>> GetAllProductsAsync();
+
+        Task RegisterInventoryAsync(EmployeeInventoryDto dto);
+
+        Task CloseShiftAsync(int employeeId);
     }
 }

@@ -37,7 +37,7 @@ services:
       # Conexión a MySQL (Server=burrito_mysql)
       - ConnectionStrings__DefaultConnection=Server=burrito_mysql;Database=BurritoPOS;User=root;Password=PasswordSeguro123!;
       # Conexión a Mongo (host=burrito_mongo)
-      - MongoSettings__ConnectionString=mongodb://root:PasswordSeguro123!@burrito_mongo:27017
+      - ConnectionStrings__MongoConnection=mongodb://root:PasswordSeguro123!@burrito_mongo:27017/BurritosLogDB?authSource=admin
       - ASPNETCORE_URLS=http://+:8080
     depends_on:
       - burrito_mysql
