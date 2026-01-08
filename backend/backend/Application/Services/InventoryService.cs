@@ -93,5 +93,24 @@ namespace backend.Application.Services
 
             await _inventoryRepository.UpdateInventoryAsync(openInventory);
         }
+
+        public async Task<EmployeeInventoryDto?> GetOpenInventoryByEmployeeAsync(int employeeId)
+        {
+            var inventoryDoc = await _inventoryRepository.GetOpenInventoryAsync(employeeId);
+
+            if (inventoryDoc == null) return null;
+
+            return new EmployeeInventoryDto
+            {
+                EmployeeId = inventoryDoc.EmployeeId,
+
+                Products = inventoryDoc.Products.Select(p => new StockItemDto
+                {
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    Quantity = p.Quantity
+                }).ToList()
+            };
+        }
     }
 }

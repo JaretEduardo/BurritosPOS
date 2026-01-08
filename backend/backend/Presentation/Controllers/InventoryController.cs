@@ -89,5 +89,30 @@ namespace backend.Presentation.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("get-open-inventory")]
+        public async Task<IActionResult> GetOpenInventory()
+        {
+            try
+            {
+                var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdString)) return Unauthorized(new { message = "Token inválido" });
+
+                var employeeId = int.Parse(userIdString);
+
+                var inventory = await _inventoryService.GetOpenInventoryByEmployeeAsync(employeeId);
+
+                if (inventory == null)
+                {
+                    return NotFound(new { message = "No tienes un turno abierto actualmente." });
+                }
+
+                return Ok(inventory);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

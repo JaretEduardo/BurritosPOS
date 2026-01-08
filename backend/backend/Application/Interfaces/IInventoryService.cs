@@ -12,5 +12,7 @@ namespace backend.Application.Interfaces
         Task RegisterInventoryAsync(EmployeeInventoryDto dto);
 
         Task CloseShiftAsync(int employeeId);
+
+        Task<EmployeeInventoryDto?> GetOpenInventoryByEmployeeAsync(int employeeId);
     }
 }
