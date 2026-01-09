@@ -23,94 +23,183 @@ namespace backend.Application.Services
             _configuration = configuration;
         }
 
-        public async Task<Product> ProductAsync(ProductDto dto)
+        public async Task<ServiceResponseDto<Product>> ProductAsync(ProductDto dto)
         {
-            var product = new Product
+            var response = new ServiceResponseDto<Product>();
+
+            try
             {
-                Id = dto.Id,
-                Name = dto.Name,
-                Description = dto.Description,
-                Price = dto.Price
-            };
-
-            await _productRepository.AddAsync(product);
-
-            return product;
-        }
-
-        public async Task<IEnumerable<Product>> GetAllProductsAsync()
-        {
-            return await _productRepository.GetAllAsync();
-        }
-
-        public async Task RegisterInventoryAsync(EmployeeInventoryDto dto)
-        {
-            var currentInventory = await _inventoryRepository.GetOpenInventoryAsync(dto.EmployeeId);
-
-            if (currentInventory != null)
-            {
-                currentInventory.Products = dto.Products.Select(p => new InventoryProduct
+                var product = new Product
                 {
-                    ProductId = p.ProductId,
-                    ProductName = p.ProductName,
-                    Quantity = p.Quantity
-                }).ToList();
+                    Id = dto.Id,
+                    Name = dto.Name,
+                    Description = dto.Description,
+                    Price = dto.Price
+                };
 
-                await _inventoryRepository.UpdateInventoryAsync(currentInventory);
+                await _productRepository.AddAsync(product);
+
+                response.Data = product;
+                response.Status = true;
+                response.Message = "Producto registrado correctamente";
             }
-            else
+            catch (Exception ex)
             {
-                var newInventory = new EmployeeInventory
-                {
-                    EmployeeId = dto.EmployeeId,
-                    InventoryDate = DateTime.UtcNow,
-                    CreatedAt = DateTime.UtcNow,
-                    IsClosed = false,
+                response.Status = false;
+                response.Message = "Error al registrar producto: " + ex.Message;
+            }
 
-                    Products = dto.Products.Select(p => new InventoryProduct
+            return response;
+        }
+
+        public async Task<ServiceResponseDto<IEnumerable<Product>>> GetAllProductsAsync()
+        {
+            var response = new ServiceResponseDto<IEnumerable<Product>>();
+
+            try
+            {
+                var products = await _productRepository.GetAllAsync();
+
+                response.Data = products;
+                response.Status = true;
+                response.Message = "Productos obtenidos exitosamente";
+            }
+            catch (Exception ex)
+            {
+                response.Status = false;
+                response.Message = "Error al obtener productos: " + ex.Message;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponseDto<bool>> RegisterInventoryAsync(EmployeeInventoryDto dto)
+        {
+            var response = new ServiceResponseDto<bool>();
+
+            try
+            {
+                var currentInventory = await _inventoryRepository.GetOpenInventoryAsync(dto.EmployeeId);
+
+                if (currentInventory != null)
+                {
+                    currentInventory.Products = dto.Products.Select(p => new InventoryProduct
                     {
                         ProductId = p.ProductId,
                         ProductName = p.ProductName,
                         Quantity = p.Quantity
-                    }).ToList()
-                };
+                    }).ToList();
 
-                await _inventoryRepository.UpdateInventoryAsync(newInventory);
-            }
-        }
+                    await _inventoryRepository.UpdateInventoryAsync(currentInventory);
 
-        public async Task CloseShiftAsync(int employeeId)
-        {
-            var openInventory = await _inventoryRepository.GetOpenInventoryAsync(employeeId);
-
-            if (openInventory == null)
-            {
-                throw new Exception("No tienes un turno abierto para cerrar.");
-            }
-
-            openInventory.IsClosed = true;
-            openInventory.ClosedAt = DateTime.UtcNow;
-
-            await _inventoryRepository.UpdateInventoryAsync(openInventory);
-        }
-
-        public async Task<EmployeeInventoryDto?> GetOpenInventoryByEmployeeAsync(int employeeId)
-        {
-            var inventoryDoc = await _inventoryRepository.GetOpenInventoryAsync(employeeId);
-
-            if (inventoryDoc == null) return null;
-
-            return new EmployeeInventoryDto
-            {
-                EmployeeId = inventoryDoc.EmployeeId,
-
-                Products = inventoryDoc.Products.Select(p => new StockItemDto
+                    response.Message = "Inventario actualizado correctamente";
+                }
+                else
                 {
-                    ProductId = p.ProductId,
-                    ProductName = p.ProductName,
-                    Quantity = p.Quantity
-                }).ToList()
-            };
+                    var newInventory = new EmployeeInventory
+                    {
+                        EmployeeId = dto.EmployeeId,
+                        InventoryDate = DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow,
+                        IsClosed = false,
+                        Products = dto.Products.Select(p => new InventoryProduct
+                        {
+                            ProductId = p.ProductId,
+                            ProductName = p.ProductName,
+                            Quantity = p.Quantity
+                        }).ToList()
+                    };
+
+                    await _inventoryRepository.UpdateInventoryAsync(newInventory);
+
+                    response.Message = "Nuevo turno de inventario iniciado";
+                }
+
+                response.Data = true;
+                response.Status = true;
+            }
+            catch (Exception ex)
+            {
+                response.Status = false;
+                response.Message = "Error al guardar inventario: " + ex.Message;
+                response.Data = false;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponseDto<bool>> CloseShiftAsync(int employeeId)
+        {
+            var response = new ServiceResponseDto<bool>();
+
+            try
+            {
+                var openInventory = await _inventoryRepository.GetOpenInventoryAsync(employeeId);
+
+                if (openInventory == null)
+                {
+                    response.Status = false;
+                    response.Message = "No tienes un turno abierto para cerrar.";
+                    response.Data = false;
+                    return response;
+                }
+
+                openInventory.IsClosed = true;
+                openInventory.ClosedAt = DateTime.UtcNow;
+
+                await _inventoryRepository.UpdateInventoryAsync(openInventory);
+
+                response.Data = true;
+                response.Status = true;
+                response.Message = "Turno cerrado exitosamente.";
+            }
+            catch (Exception ex)
+            {
+                response.Status = false;
+                response.Message = "Error al cerrar turno: " + ex.Message;
+                response.Data = false;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponseDto<EmployeeInventoryDto?>> GetOpenInventoryByEmployeeAsync(int employeeId)
+        {
+            var response = new ServiceResponseDto<EmployeeInventoryDto?>();
+
+            try
+            {
+                var inventoryDoc = await _inventoryRepository.GetOpenInventoryAsync(employeeId);
+
+                if (inventoryDoc == null)
+                {
+                    response.Data = null;
+                    response.Status = true;
+                    response.Message = "No hay turno activo.";
+                }
+                else
+                {
+                    response.Data = new EmployeeInventoryDto
+                    {
+                        EmployeeId = inventoryDoc.EmployeeId,
+                        Products = inventoryDoc.Products.Select(p => new StockItemDto
+                        {
+                            ProductId = p.ProductId,
+                            ProductName = p.ProductName,
+                            Quantity = p.Quantity
+                        }).ToList()
+                    };
+                    response.Status = true;
+                    response.Message = "Inventario encontrado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Status = false;
+                response.Message = "Error al obtener inventario: " + ex.Message;
+            }
+
+            return response;
         }
     }
 }

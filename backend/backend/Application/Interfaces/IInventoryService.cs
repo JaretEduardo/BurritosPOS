@@ -5,14 +5,14 @@ namespace backend.Application.Interfaces
 {
     public interface IInventoryService
     {
-        Task<Product> ProductAsync(ProductDto dto);
+        Task<ServiceResponseDto<Product>> ProductAsync(ProductDto dto);
 
-        Task<IEnumerable<Product>> GetAllProductsAsync();
+        Task<ServiceResponseDto<IEnumerable<Product>>> GetAllProductsAsync();
 
-        Task RegisterInventoryAsync(EmployeeInventoryDto dto);
+        Task<ServiceResponseDto<bool>> RegisterInventoryAsync(EmployeeInventoryDto dto);
 
-        Task CloseShiftAsync(int employeeId);
+        Task<ServiceResponseDto<bool>> CloseShiftAsync(int employeeId);
 
-        Task<EmployeeInventoryDto?> GetOpenInventoryByEmployeeAsync(int employeeId);
+        Task<ServiceResponseDto<EmployeeInventoryDto?>> GetOpenInventoryByEmployeeAsync(int employeeId);
     }
 }

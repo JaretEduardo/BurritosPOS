@@ -21,98 +21,94 @@ namespace backend.Presentation.Controllers
         [HttpPost("entryProduct")]
         public async Task<IActionResult> EntryProduct([FromBody] ProductDto dto)
         {
-            try
+            var result = await _inventoryService.ProductAsync(dto);
+
+            if (!result.Status)
             {
-                var product = await _inventoryService.ProductAsync(dto);
-                return Ok(new { message = "Producto registrado correctamente" });
+                return BadRequest(result);
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+
+            return Ok(result);
         }
 
         [HttpGet("getAllProducts")]
         public async Task<IActionResult> GetAllProducts()
         {
-            try
+            var result = await _inventoryService.GetAllProductsAsync();
+
+            if (!result.Status)
             {
-                var products = await _inventoryService.GetAllProductsAsync();
-                return Ok(products);
+                return BadRequest(result);
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+
+            return Ok(result);
         }
 
         [HttpPost("registerInventory")]
         public async Task<IActionResult> RegisterInventory([FromBody] EmployeeInventoryDto dto)
         {
-            try
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdString))
             {
-                var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                if (string.IsNullOrEmpty(userIdString))
-                {
-                    return Unauthorized(new { message = "Token inválido: No se encontró el ID del usuario." });
-                }
-
-                dto.EmployeeId = int.Parse(userIdString);
-
-                await _inventoryService.RegisterInventoryAsync(dto);
-
-                return Ok(new { message = "Inventario actualizado con éxito" });
+                return Unauthorized(new { status = false, message = "Token inválido: No se encontró el ID del usuario.", data = (object?)null });
             }
-            catch (Exception ex)
+
+            dto.EmployeeId = int.Parse(userIdString);
+
+            var result = await _inventoryService.RegisterInventoryAsync(dto);
+
+            if (!result.Status)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(result);
             }
+
+            return Ok(result);
         }
 
         [HttpPost("closeShift")]
         public async Task<IActionResult> CloseShift()
         {
-            try
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdString))
+                return Unauthorized(new { status = false, message = "Token inválido", data = (object?)null });
+
+            var employeeId = int.Parse(userIdString);
+
+            var result = await _inventoryService.CloseShiftAsync(employeeId);
+
+            if (!result.Status)
             {
-                var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userIdString)) return Unauthorized(new { message = "Token inválido" });
-
-                var employeeId = int.Parse(userIdString);
-
-                await _inventoryService.CloseShiftAsync(employeeId);
-
-                return Ok(new { message = "Turno cerrado correctamente. Hasta mañana." });
+                return BadRequest(result);
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+
+            return Ok(result);
         }
 
         [HttpGet("get-open-inventory")]
         public async Task<IActionResult> GetOpenInventory()
         {
-            try
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdString))
+                return Unauthorized(new { status = false, message = "Token inválido", data = (object?)null });
+
+            var employeeId = int.Parse(userIdString);
+
+            var result = await _inventoryService.GetOpenInventoryByEmployeeAsync(employeeId);
+
+            if (!result.Status)
             {
-                var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userIdString)) return Unauthorized(new { message = "Token inválido" });
-
-                var employeeId = int.Parse(userIdString);
-
-                var inventory = await _inventoryService.GetOpenInventoryByEmployeeAsync(employeeId);
-
-                if (inventory == null)
-                {
-                    return NotFound(new { message = "No tienes un turno abierto actualmente." });
-                }
-
-                return Ok(inventory);
+                return BadRequest(result);
             }
-            catch (Exception ex)
+
+            if (result.Data == null)
             {
-                return BadRequest(new { message = ex.Message });
+                return NotFound(result);
             }
+
+            return Ok(result);
         }
     }
 }
