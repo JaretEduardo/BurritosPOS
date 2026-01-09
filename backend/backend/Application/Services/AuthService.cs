@@ -20,12 +20,17 @@ namespace backend.Application.Services
             _configuration = configuration;
         }
 
-        public async Task<Employee> RegisterAsync(RegisterDto dto)
+        public async Task<ServiceResponseDto<Employee>> RegisterAsync(RegisterDto dto)
         {
             var existingUser = await _repository.GetByEmailAsync(dto.Email);
+
+            var response = new ServiceResponseDto<Employee>();
+
             if (existingUser != null)
             {
-                throw new Exception("El email ya está registrado.");
+                response.Status = false;
+                response.Message = "El email ya está registrado.";
+                return response;
             }
 
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
@@ -35,22 +40,30 @@ namespace backend.Application.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                PasswordHash = passwordHash
+                PhoneNumber = dto.PhoneNumber
             };
 
             await _repository.AddAsync(newEmployee);
 
-            return newEmployee;
+            response.Status = true;
+            response.Message = "Usuario registrado exitosamente";
+            response.Data = newEmployee;
+
+            return response;
         }
 
-        public async Task<string> LoginAsync(LoginDto dto)
+        public async Task<ServiceResponseDto<string>> LoginAsync(LoginDto dto)
         {
             var user = await _repository.GetByEmailAsync(dto.Email);
 
+            var response = new ServiceResponseDto<string>();
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             {
-                throw new Exception("Credenciales inválidas.");
+                response.Status = false;
+                response.Message = "Credenciales inválidas (Usuario o contraseña incorrectos).";
+                response.Data = null;
+                return response;
             }
 
             var claims = new[]
@@ -76,7 +89,11 @@ namespace backend.Application.Services
 
             string tokenFinal = tokenHandler.WriteToken(tokenConfig);
 
-            return tokenFinal;
+            response.Data = tokenFinal;
+            response.Status = true;
+            response.Message = "Login exitoso";
+
+            return response;
         }
     }
 }

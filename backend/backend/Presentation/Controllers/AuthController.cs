@@ -18,29 +18,27 @@ namespace backend.Presentation.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            try
+            var result = await _authService.RegisterAsync(dto);
+
+            if (!result.Status)
             {
-                var employee = await _authService.RegisterAsync(dto);
-                return Ok(new { message = "Usuario registrado con éxito", id = employee.Id });
+                return BadRequest(result);
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+
+            return Ok(result);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            try
+            var result = await _authService.LoginAsync(dto);
+
+            if (!result.Status)
             {
-                var token = await _authService.LoginAsync(dto);
-                return Ok(new { token });
+                return Unauthorized(result);
             }
-            catch (Exception ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
+
+            return Ok(result);
         }
     }
 }
